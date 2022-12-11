@@ -95,6 +95,8 @@ unsigned int	NextSymbolAddress		(unsigned int value);
 link 			Add						(link head, Instruction *inst);
 unsigned int	GetLocctr				(link head);
 void			PrintList				(link head);
+void			PrintSym				(symtab_link head);
+void			WriteSym				(symtab_link head, char *fileName);
 void			WriteFile				(link head, char *fileName, int fileflag);
 void			FreeItems				(link head);
 void			FreeList				(link head);
@@ -109,7 +111,7 @@ int main(int argc, const char * argv[]) {
 	int modnx = 0;
 
 	if(argv[1]==NULL) {
-		printf("Please provide a <filename> \n");
+		printf("input: \"sample2.obj\" \n");
 		exit(1);
 	}
 
@@ -162,8 +164,10 @@ int main(int argc, const char * argv[]) {
 	printf("Program length: %06X\n\n", Head_rec->prg_length);
 	printf("\nSOURCE CODE DISASSEMBLEMENT\n");
 	PrintList(head);
+	PrintSym(symtab_head);
+	WriteSym(symtab_head, "output_symtab.sym");
 	// WriteFile(head, sic_name, 0);
-	// WriteFile(head, lis_name, 1);
+	WriteFile(head, "output_symtab.lis", 1);
 	/******** END OF STEP 3 *******/
 	
 	// printf("\nFiles %s and %s were created.\n\n", sic_name, lis_name);
@@ -920,6 +924,36 @@ unsigned int GetLocctr(link head) {
 		return listptr->instext_tmp->loc_ctr+3;
 } 
 
+
+void PrintSym(symtab_link head) {
+	symtab_link symptr = head;
+	printf("%6s ", "Label");
+	printf("%4s  ", "ADDR");
+	printf("\n");
+	while(symptr!=NULL) {
+		printf("%6s ", symptr->sym->label);
+		printf("%04X  ", symptr->sym->address);
+		symptr = symptr->next;
+		printf("\n");
+	}
+	return;
+}
+
+void WriteSym(symtab_link head, char *fileName) {
+	FILE *fPtr = fopen(fileName, "wb");
+	symtab_link symptr = head;
+	fprintf(fPtr, "%6s ", "Label");
+	fprintf(fPtr, "%4s  ", "ADDR");
+	fprintf(fPtr, "\n");
+	while(symptr!=NULL) {
+		fprintf(fPtr, "%6s ", symptr->sym->label);
+		fprintf(fPtr, "%04X  ", symptr->sym->address);
+		symptr = symptr->next;
+		fprintf(fPtr, "\n");
+	}
+	return;
+}
+
 void PrintList(link head) {
 	link listptr = head;
 	int cnt = 0;
@@ -978,17 +1012,13 @@ void PrintList(link head) {
 void WriteFile(link head, char *fileName, int fileflag) {
 	FILE *fPtr = fopen(fileName, "wb");
 	link listptr = head;
-	int j;
-	while(listptr!=NULL)
-	{
-		if(fileflag==1)
-		{
-			if(listptr->instext_tmp->format!=-2)
-			{
+	int cnt = 0;
+	while(listptr!=NULL) {
+		if(fileflag==1) {
+			if(listptr->instext_tmp->format!=-2) {
 				fprintf(fPtr, "%04X  ", listptr->instext_tmp->loc_ctr);
 			}
-			else
-			{
+			else {
 				fprintf(fPtr, "      ");
 			}
 		}
@@ -1001,31 +1031,29 @@ void WriteFile(link head, char *fileName, int fileflag) {
         listptr->instext_tmp->operand[9] = '\0';
 		fprintf(fPtr, "%7s   ", listptr->instext_tmp->operand);
         
-        if(fileflag==1)
-		{
+        if(fileflag==1) {
 			int format = listptr->instext_tmp->format;
 			int objlen = 0;
-			if(format == 0 || format == 3)
-			{
+			if(format == 0 || format == 3) {
 				objlen = 3;
-			} else if (format == 4)
-			{
+			} 
+			else if (format == 4) {
 				objlen = 4;
-			} else if (format == 2)
-			{
+			} 
+			else if (format == 2) {
 				objlen = 2;
-			} else if (format == 1)
-			{
+			} 
+			else if (format == 1 || format == 5) {
 				objlen = 1;
 			}
 				
-			for(j = 0; j < objlen; j++)
-			{
+			for(int j = 0; j < objlen; j++) {
 				fprintf(fPtr, "%02X", listptr->instext_tmp->objcode[j]);
 			}
 		}
         fprintf(fPtr, "\n");
 		listptr=listptr->next;
+		cnt++;
 	}
     fclose(fPtr);
 	return;
