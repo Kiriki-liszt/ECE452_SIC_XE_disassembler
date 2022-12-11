@@ -415,7 +415,7 @@ Instruction* Format0(Instruction* instptr, unsigned char curbyte, unsigned int l
 		}
 	}
 	else {
-		strncpy(instptr->operand+1, "      ", 7);
+		strncpy(instptr->operand+1, "        ", 9);
 	}
 	instptr->format=3;
 	instptr->objcode[0] = inst[i];
@@ -456,7 +456,7 @@ Instruction* Format3(Instruction* instptr, unsigned char curbyte, unsigned int l
 		//addressingmode = "Immediate";
 		instptr->operand[0]='#';
 		code = 1;
-		sprintf(instptr->operand+1, "%d     ", disp);
+		sprintf(instptr->operand+1, "%d         ", disp);
 	}
 	else {
 		instptr->operand[0]=' ';
@@ -485,10 +485,6 @@ Instruction* Format3(Instruction* instptr, unsigned char curbyte, unsigned int l
 			strncpy(instptr->operand+ (strlen(GetSymbolName(targetaddress))+1), "  ", 2);
 		}
 	}
-	else {
-		strncpy(instptr->operand+1, "        ", 9);
-	}
-
 
 	instptr->format=3;
 	instptr->objcode[0] = inst[i];
@@ -508,6 +504,8 @@ Instruction* Format4(Instruction* instptr, unsigned char curbyte, unsigned int l
 	enum boolean xflag=false;
 	char* addressingmode;
 
+	int code = 0;
+
 	if(Bit(inst[i+1],7)==1)
 		xflag=true;
 
@@ -518,6 +516,7 @@ Instruction* Format4(Instruction* instptr, unsigned char curbyte, unsigned int l
 	else if(Bit(curbyte,1)==0&&Bit(curbyte,0)==1) {
 		addressingmode = "Immediate";
 		instptr->operand[0]='#';
+		code = 1;
 		sprintf(instptr->operand+1, "%d    ", address);
 	}
 	else {
@@ -525,7 +524,7 @@ Instruction* Format4(Instruction* instptr, unsigned char curbyte, unsigned int l
 		addressingmode = "Direct";
 	}
 	
-	if (curbyte != 0x4C) {
+	if ((code == 0) && (curbyte != 0x4C)) {
 		strncpy(instptr->operand+1, GetSymbolName(address), 7);
 		if(xflag==true) {
 			strncpy(instptr->operand+ (strlen(GetSymbolName(address))+1), ",X", 2);
@@ -533,9 +532,6 @@ Instruction* Format4(Instruction* instptr, unsigned char curbyte, unsigned int l
 		else {
 			strncpy(instptr->operand+ (strlen(GetSymbolName(address))+1), "  ", 2);
 		}
-	}
-	else {
-		strncpy(instptr->operand+1, "      ", 7);
 	}
 
 	instptr->format=4;
@@ -549,7 +545,7 @@ Instruction* Format4(Instruction* instptr, unsigned char curbyte, unsigned int l
 Instruction* ByteData(Instruction* instptr, unsigned char curbyte, unsigned int locctr, int i, unsigned char inst[30]) {
 	instptr->loc_ctr=locctr;
 	instptr->format = 1;//indicates number of objcode bytes to produce
-	strncpy(instptr->opname, "BYTE  ",6);
+	strncpy(instptr->opname, " BYTE \0", 8);
 	instptr->objcode[0] = inst[i];
 	instptr->operand[0]=' ';
 	strncpy(instptr->operand+1, "X'",2);
@@ -615,10 +611,11 @@ link InsertENDDirective(link HEAD, unsigned int LOCCTR) {
     END->objcode[3] = '\0';
 	strncpy(END->opname, " END   \0", 8);
     strncpy(END->label, "      \0", 7);
-	strncpy(END->operand, GetSymbolName(LOCCTR), 7);
+	strncpy(END->operand, GetSymbolName(LOCCTR), 9);
     HEAD = Add(HEAD, END);
     return HEAD;
 } 
+
 
 link InsertBASEDirective(link HEAD, unsigned int LOCCTR, unsigned int targetaddress) {
 	Instruction *BASE = malloc(sizeof(Instruction));
@@ -628,9 +625,9 @@ link InsertBASEDirective(link HEAD, unsigned int LOCCTR, unsigned int targetaddr
     BASE->objcode[2] = ' ';
     BASE->objcode[3] = '\0';
 	BASE->loc_ctr=LOCCTR;
-	strncpy(BASE->opname, "BASE  ",6);
+	strncpy(BASE->opname, "BASE  \0",8);
     strncpy(BASE->label, "      \0", 7);
-	strncpy(BASE->operand, GetSymbolName(targetaddress), 7);
+	strncpy(BASE->operand, GetSymbolName(targetaddress), 9);
     HEAD = Add(HEAD, BASE);
     return HEAD;
 }
@@ -973,8 +970,7 @@ void PrintList(link head) {
 	return;
 }
 
-void WriteFile(link head, char *fileName, int fileflag)
-{
+void WriteFile(link head, char *fileName, int fileflag) {
 	FILE *fPtr = fopen(fileName, "wb");
 	link listptr = head;
 	int j;
