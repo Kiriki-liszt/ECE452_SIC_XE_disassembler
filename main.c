@@ -476,7 +476,9 @@ Instruction* Format3(Instruction* instptr, unsigned char curbyte, unsigned int l
 		targetaddress = disp;
 	}
 
-	if ((code == 0) && (curbyte != 0x4C)) {
+	unsigned char opcode=curbyte>>2; opcode<<=2;
+
+	if ( ((code == 0) && (opcode != 0x4C)) || ((code == 1) && (opcode == 0x68)) )  {
 		strncpy(instptr->operand+1, GetSymbolName(targetaddress), 7);
 		if(xflag==true) {
 			strncpy(instptr->operand+ (strlen(GetSymbolName(targetaddress))+1), ",X", 2);
@@ -523,8 +525,11 @@ Instruction* Format4(Instruction* instptr, unsigned char curbyte, unsigned int l
 		instptr->operand[0]=' ';
 		addressingmode = "Direct";
 	}
+
+	unsigned char opcode=curbyte>>2; opcode<<=2;
+
 	
-	if ((code == 0) && (curbyte != 0x4C)) {
+	if ((code == 0) && (opcode != 0x4C)) {
 		strncpy(instptr->operand+1, GetSymbolName(address), 7);
 		if(xflag==true) {
 			strncpy(instptr->operand+ (strlen(GetSymbolName(address))+1), ",X", 2);
