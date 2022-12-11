@@ -545,7 +545,7 @@ Instruction* Format4(Instruction* instptr, unsigned char curbyte, unsigned int l
 Instruction* ByteData(Instruction* instptr, unsigned char curbyte, unsigned int locctr, int i, unsigned char inst[30]) {
 	instptr->loc_ctr=locctr;
 	instptr->format = 1;//indicates number of objcode bytes to produce
-	strncpy(instptr->opname, " BYTE \0", 8);
+	strncpy(instptr->opname, "BYTE  \0", 8);
 	instptr->objcode[0] = inst[i];
 	instptr->operand[0]=' ';
 	strncpy(instptr->operand+1, "X'",2);
@@ -926,7 +926,7 @@ void PrintList(link head) {
 			printf("      ");
 		}
 		// search label
-		if( cnt != 0 ) {
+		if ( (listptr->next != NULL) && ( cnt != 0 ) ) {
 			symtab_link now = symtab_head;
 			while(now != NULL) {
 				if(listptr->instext_tmp->loc_ctr == now->sym->address) {
